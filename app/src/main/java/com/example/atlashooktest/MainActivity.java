@@ -14,6 +14,9 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import dalvik.system.DexClassLoader;
+
+import com.taobao.android.dex.interpret.ARTUtils;
 import com.taobao.android.runtime.AndroidRuntime;
 
 import org.apache.commons.io.IOUtils;
@@ -83,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
         mBtnLoadDexEnableDexOpt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            loadDexEnableDexOptAsync();
+                loadDexEnableDexOptAsync();
             }
         });
 
@@ -91,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
         mBtnLoadDexDisableDexOpt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            loadDexDisableDexOptAsync();
+                loadDexDisableDexOptAsync();
             }
         });
 
@@ -110,7 +113,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             protected void onPreExecute() {
-                mProgressDialog = ProgressDialog.show(MainActivity.this, null, "loadDexEnableDexOptAsync...");
+                mProgressDialog = ProgressDialog.show(MainActivity.this, null,
+                        "loadDexEnableDexOptAsync...");
                 mBtnLoadDexEnableDexOpt.setEnabled(false);
             }
 
@@ -152,7 +156,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             protected void onPreExecute() {
-                mProgressDialog = ProgressDialog.show(MainActivity.this, null, "loadDexDisableDexOptAsync...");
+                mProgressDialog = ProgressDialog.show(MainActivity.this, null,
+                        "loadDexDisableDexOptAsync...");
                 mBtnLoadDexDisableDexOpt.setEnabled(false);
             }
 
@@ -170,13 +175,19 @@ public class MainActivity extends AppCompatActivity {
                 deleteOdex();
 
                 final long start = SystemClock.elapsedRealtime();
-                try {
-                    final AndroidRuntime instance = AndroidRuntime.getInstance();
-                    instance.setEnabled(true);
-                    instance.loadDex(mApkPathDisableDexOpt, mOdexPathDisableDexOpt, 0);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+//                    final AndroidRuntime instance = AndroidRuntime.getInstance();
+//                    instance.setEnabled(true);
+//                    instance.loadDex(mApkPathDisableDexOpt, mOdexPathDisableDexOpt, 0);
+
+                ARTUtils.setIsDex2oatEnabled(false);
+
+                DexClassLoader classLoader = new DexClassLoader(mApkPathDisableDexOpt,
+                        new File(mOdexPathDisableDexOpt).getParent(),
+                        new File(mOdexPathDisableDexOpt).getParent(),
+                        MainActivity.class.getClassLoader());
+
+                ARTUtils.setIsDex2oatEnabled(true);
+
                 final long timeCost = SystemClock.elapsedRealtime() - start;
                 Log.d(App.TAG, "loadDexDisableDexOpt cost ms: " + timeCost);
                 return timeCost;
@@ -203,7 +214,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             protected void onPreExecute() {
-                mProgressDialog = ProgressDialog.show(MainActivity.this, null, "Copying plugin apk to internal storage...");
+                mProgressDialog = ProgressDialog.show(MainActivity.this, null,
+                        "Copying plugin apk to internal storage...");
             }
 
             @Override
