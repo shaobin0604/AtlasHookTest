@@ -15,9 +15,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import dalvik.system.DexClassLoader;
+import dalvik.system.DexFile;
 
 import com.taobao.android.dex.interpret.ARTUtils;
-import com.taobao.android.runtime.AndroidRuntime;
 
 import org.apache.commons.io.IOUtils;
 
@@ -124,25 +124,23 @@ public class MainActivity extends AppCompatActivity {
                     mProgressDialog.dismiss();
                     mProgressDialog = null;
                 }
-                mEnableDexOptResult.setText("loadDexDisableDexOpt cost ms: " + timeCost);
+                mEnableDexOptResult.setText("loadDexEnableDexOpt cost ms: " + timeCost);
             }
 
 
             @Override
             protected Long doInBackground(Void... params) {
                 deleteOdex();
+                ARTUtils.setIsDex2oatEnabled(true);
 
                 long start = SystemClock.elapsedRealtime();
                 try {
-                    final AndroidRuntime instance = AndroidRuntime.getInstance();
-                    instance.setEnabled(false);
-
-                    instance.loadDex(mApkPathEnableDexOpt, mOdexPathEnableDexOpt, 0);
-
+                    DexFile.loadDex(mApkPathEnableDexOpt, mOdexPathEnableDexOpt, 0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 final long timeCost = SystemClock.elapsedRealtime() - start;
+
                 Log.d(App.TAG, "LoadDexEnableDexOpt cost ms: " + timeCost);
                 return timeCost;
             }
@@ -173,23 +171,18 @@ public class MainActivity extends AppCompatActivity {
             @Override
             protected Long doInBackground(Void... params) {
                 deleteOdex();
-
-                final long start = SystemClock.elapsedRealtime();
-//                    final AndroidRuntime instance = AndroidRuntime.getInstance();
-//                    instance.setEnabled(true);
-//                    instance.loadDex(mApkPathDisableDexOpt, mOdexPathDisableDexOpt, 0);
-
                 ARTUtils.setIsDex2oatEnabled(false);
 
-                DexClassLoader classLoader = new DexClassLoader(mApkPathDisableDexOpt,
-                        new File(mOdexPathDisableDexOpt).getParent(),
-                        new File(mOdexPathDisableDexOpt).getParent(),
-                        MainActivity.class.getClassLoader());
-
-                ARTUtils.setIsDex2oatEnabled(true);
-
+                final long start = SystemClock.elapsedRealtime();
+                try {
+                    DexFile.loadDex(mApkPathDisableDexOpt, mOdexPathDisableDexOpt, 0);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 final long timeCost = SystemClock.elapsedRealtime() - start;
+
                 Log.d(App.TAG, "loadDexDisableDexOpt cost ms: " + timeCost);
+                ARTUtils.setIsDex2oatEnabled(true);
                 return timeCost;
             }
         }.execute();
